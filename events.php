@@ -1,59 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <link   href="css/bootstrap.min.css" rel="stylesheet">
-    <script src="js/bootstrap.min.js"></script>
-</head>
+<?php
 
-<body>
-    <div class="container">
-			<div class="row">
-				<a href=https://github.com/Jcstuart/Project1.git class="btn btn-success">GitHub Repo</a>
-			</div>
-    		<div class="row">
-    			<h3>Events</h3>
-    		</div>
-			<div class="row">
-				<p>
-					<a href="event_create.php" class="btn btn-success">Create</a>
-				</p>
-				
-				<table class="table table-striped table-bordered">
-		              <thead>
-		                <tr>
-		                  <th>Date</th>
-		                  <th>Time</th>
-		                  <th>Location</th>
-		                  <th>Description</th>
-						  <th>Action</th>
-		                </tr>
-		              </thead>
-		              <tbody>
-		              <?php 
-					   require 'database.php';
-					   $pdo = Database::connect();
-					   $sql = 'SELECT * FROM Events ORDER BY id DESC';
-	 				   foreach ($pdo->query($sql) as $row) {
-						   		echo '<tr>';
-							   	echo '<td>'. $row['event_date'] . '</td>';
-							   	echo '<td>'. $row['event_time'] . '</td>';
-							   	echo '<td>'. $row['event_location'] . '</td>';
-							   	echo '<td>'. $row['event_description'] . '</td>';
-							   	echo '<td width=250>';
-							   	echo '<a class="btn" href="event_read.php?id='.$row['id'].'">Read</a>';
-							   	echo '&nbsp;';
-							   	echo '<a class="btn btn-success" href="event_update.php?id='.$row['id'].'">Update</a>';
-							   	echo '&nbsp;';
-							   	echo '<a class="btn btn-danger" href="event_delete.php?id='.$row['id'].'">Delete</a>';
-							   	echo '</td>';
-							   	echo '</tr>';
-					   }
-					   Database::disconnect();
-					  ?>
-				      </tbody>
-	            </table>
-    	</div>
-    </div> <!-- /container -->
-  </body>
-</html>
+// include the class that handles database connections
+require "database.php";
+
+// include the class containing functions/methods for "customer" table
+// Note: this application uses "customer" table, not "cusotmers" table
+require "event.class.php";
+$event = new Event();
+ 
+// set active record field values, if any 
+// (field values not set for display_list and display_create_form)
+if(isset($_GET["id"]))          $id = $_GET["id"]; 
+if(isset($_POST["event_date"]))       $event->date = $_POST["event_date"];
+if(isset($_POST["event_time"]))      $event->time = $_POST["event_time"];
+if(isset($_POST["event_location"]))     $event->location = $_POST["event_location"];
+if(isset($_POST["event_description"]))     $event->description = $_POST["event_description"];
+
+// "fun" is short for "function" to be invoked 
+if(isset($_GET["fun"])) $fun = $_GET["fun"];
+else $fun = "display_list"; 
+
+switch ($fun) {
+    case "display_list":        $event->list_records();
+        break;
+    case "display_create_form": $event->create_record(); 
+        break;
+    case "display_read_form":   $event->read_record($id); 
+        break;
+    case "display_update_form": $event->update_record($id);
+        break;
+    case "display_delete_form": $event->delete_record($id); 
+        break;
+    case "insert_db_record":    $event->insert_db_record(); 
+        break;
+    case "update_db_record":    $event->update_db_record($id);
+        break;
+    case "delete_db_record":    $event->delete_db_record($id);
+        break;
+    default: 
+        echo "Error: Invalid function call (events.php)";
+        exit();
+        break;
+}
